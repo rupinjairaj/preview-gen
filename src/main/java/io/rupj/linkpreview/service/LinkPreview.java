@@ -15,6 +15,13 @@ import java.net.URISyntaxException;
 @SpringBootConfiguration
 public class LinkPreview {
 
+    /*
+     * API to provide with a completely generated Preview object
+     * Parameters:
+     *  String originalLink: The http link you wish to generate a preview for
+     * Return:
+     *  Preview
+     * */
     public Preview generateLinkPreview(String originalLink) {
         Document htmlDoc = null;
         try {
