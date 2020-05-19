@@ -1,4 +1,4 @@
-![](https://github.com/rupinjairaj/preview-gen/workflows/Java%20CI%20with%20Maven/badge.svg)
+![](https://github.com/rupinjairaj/preview-gen/workflows/Link%20Preview/badge.svg)
 
 # Link Preview
 
