@@ -14,6 +14,17 @@ import java.net.URISyntaxException;
 @Service
 @SpringBootConfiguration
 public class LinkPreview {
+    // Title queries
+    final static String[] metaTagTitleQueries = {"meta[property=\"og:title\"]", "meta[name=\"twitter:title\"]"};
+    final static String[] fallBackTitleQueries = {"h1", "h2"};
+    // Description queries
+    final static String[] metaTagDescriptionQueries = {
+            "meta[property=\"og:description\"]",
+            "meta[name=\"twitter:description\"]",
+            "meta[name=\"description\"]"};
+    final static String fallBackDescriptionQuery = "p";
+    // Domain queries
+    final static String[] domainQueries = {"link[rel=canonical]", "meta[property=\"og:url\"]"};
 
     /*
      * API to provide with a completely generated Preview object
@@ -42,14 +53,26 @@ public class LinkPreview {
      * If unable to extract, an empty string is returned.
      * */
     private static String getTitle(Document document) {
+        Element tag;
+        String title = "";
         // Check if Open Graph(OG), 'title', meta tag is available and use that.
-        Element metaTag = getHtmlTag.getTag(document, "meta[property=\"og:title\"]");
         // If OG is unavailable look for the twitter meta tag
-        if (metaTag == null) metaTag = getHtmlTag.getTag(document, "meta[name=\"twitter:title\"]");
-        String title = metaTag.attr("content");
-        // If meta tags are unavailable fallback to either the first H1 tag or H2.
-        title = !title.isEmpty() ? title : getHtmlTag.getTag(document, "h1").text();
-        title = !title.isEmpty() ? title : getHtmlTag.getTag(document, "h2").text();
+        for (String metaTagTitleQuery : metaTagTitleQueries) {
+            tag = getHtmlTag.getTag(document, metaTagTitleQuery);
+            if (tag != null) {
+                title = tag.attr("content");
+                return title;
+            }
+        }
+
+        // If meta tags are unavailable fallback to either the first h1 tag or h2.
+        for (String fallBackTitleQuery : fallBackTitleQueries) {
+            tag = getHtmlTag.getTag(document, fallBackTitleQuery);
+            if (tag != null) {
+                title = tag.text();
+                return title;
+            }
+        }
         return title;
     }
 
@@ -57,20 +80,38 @@ public class LinkPreview {
      * Extract a possible Description for the given html document.
      * If unable to extract, an empty String is returned.
      * */
-    // TODO: Implement a safer fallback. Maybe a <P> tag in case the meta properties are unavailable.
     private static String getDescription(Document document) {
-        Element metaTag = getHtmlTag.getTag(document, "meta[property=\"og:description\"]");
-        if (metaTag == null) metaTag = getHtmlTag.getTag(document, "meta[name=\"twitter:description\"]");
-        if (metaTag == null) metaTag = getHtmlTag.getTag(document, "meta[name=\"description\"]");
-        String description = metaTag.attr("content");
+        String description = "";
+        Element tag;
+        // Check if Open Graph(OG), 'description', meta tag is available and use that.
+        // If OG is unavailable look for the twitter description meta tag or the standard description meta tag
+        for (String metaTagDescriptionQuery : metaTagDescriptionQueries) {
+            tag = getHtmlTag.getTag(document, metaTagDescriptionQuery);
+            if (tag != null) {
+                description = tag.attr("content");
+                return description;
+            }
+        }
+
+        // if none of the universal meta tags are available this fallback will pick
+        // the first <p> tag it finds.
+        tag = getHtmlTag.getTag(document, fallBackDescriptionQuery);
+        description = tag != null ? tag.text() : description;
         return description;
     }
 
     private static String getDomainName(Document document, String originalLink) {
-        Element linkTag = getHtmlTag.getTag(document, "link[rel=canonical]");
-        if (linkTag == null) linkTag = getHtmlTag.getTag(document, "meta[property=\"og:url\"]");
-        String domain = linkTag != null ? linkTag.attr("href") : originalLink;
-        return extractDomain(domain);
+        String domain = "";
+        Element tag;
+        for (String domainQuery : domainQueries) {
+            tag = getHtmlTag.getTag(document, domainQuery);
+            if (tag != null) {
+                domain = tag.attr("href");
+                return extractDomain(domain);
+            }
+        }
+        domain = extractDomain(originalLink);
+        return domain;
     }
 
     // TODO: WIP. Figure out where to extract the correct resolution images from.
@@ -96,9 +137,4 @@ public class LinkPreview {
         return domain;
     }
 
-}
-
-@FunctionalInterface
-interface HtmlTagSearch {
-    Element getTag(Document document, String query);
 }

@@ -13,8 +13,17 @@ public class LinkPreviewTest {
     private LinkPreview linkPreview;
 
     @Test
-    public void generatePreview() {
+    public void generatePreviewWithMetaTags() {
         var preview = linkPreview.generateLinkPreview("https://spring.io/guides/gs/multi-module/#scratch");
+        assertThat(preview.description).isNotEmpty();
+        assertThat(preview.url).isNotEmpty();
+        assertThat(preview.title).isNotEmpty();
+        assertThat(preview.domain).isNotEmpty();
+    }
+
+    @Test
+    public void generatePreviewWithoutMetaTags() {
+        var preview = linkPreview.generateLinkPreview("https://pythonprogramming.net/game-frames-open-cv-python-plays-gta-v/");
         assertThat(preview.description).isNotEmpty();
         assertThat(preview.url).isNotEmpty();
         assertThat(preview.title).isNotEmpty();
