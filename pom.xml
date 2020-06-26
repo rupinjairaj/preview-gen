@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>io.rupj</groupId>
 	<artifactId>link-preview</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2</version>
 	<name>link-preview</name>
 	<description>Generates a preview object for http links</description>
 
